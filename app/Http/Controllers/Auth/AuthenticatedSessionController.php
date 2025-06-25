@@ -4,9 +4,11 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Auth\LoginRequest;
+use Exception;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 use Illuminate\View\View;
 use Illuminate\Support\Facades\Http;
 use Str;
@@ -17,36 +19,11 @@ use Illuminate\Support\Facades\Cookie;
 
 class AuthenticatedSessionController extends Controller
 {
-    /**
-     * Display the login view.
-     */
+
     public function create(): View
     {
         return view('auth.login');
     }
-
-    /**
-     * Handle an incoming authentication request.
-     */
-    // public function store(LoginRequest $request): RedirectResponse
-    // public function store(LoginRequest $request)
-    // {
-        // $response = Http::withHeaders(['Accept' => 'application/json'])->post('http://127.0.0.1:8001/api/cross-login', [
-        //     'email' => '$user->email',
-        // ]);
-        // $response = Http::post('http://127.0.0.1:8001/api/cross-login', [
-        //     'email' => 'irfan@gmail.com',
-        // ]);
-        // return $response->json();
-
-        // $user = Auth::user();
-
-        // // Call to foodpanda-app
-
-
-        // // Token create
-        // $token = $user->createToken('SSO-Token')->plainTextToken;
-
 
 
     public function store(LoginRequest $request)
@@ -56,12 +33,16 @@ class AuthenticatedSessionController extends Controller
 
         $user = Auth::user();
 
-        // Token create to foodpanda-app
-        $token = $user->createToken('SSO-Token')->plainTextToken;
-        $redirectToUrl = config('app.sso_redirect_url');
-        Http::withToken($token)->post("$redirectToUrl/api/cross-login", [
-            'email' => $user->email
-        ]);
+        try {
+            $token = $user->createToken('SSO-Token')->plainTextToken;
+            $redirectToUrl = config('app.sso_redirect_url');
+            Http::withToken($token)->post("$redirectToUrl/api/cross-login", [
+                'email' => $user->email
+            ]);
+        } catch (Exception $e) {
+            Log::info(["Error: " => $e->getMessage()]);
+        }
+
 
         return redirect('/dashboard')
             ->withCookie(cookie('sso_token', $token, 60))
@@ -70,7 +51,11 @@ class AuthenticatedSessionController extends Controller
 
     public function destroy(Request $request): RedirectResponse
     {
-        self::tokenDestroyFromOtherSite($request);
+        try {
+            self::tokenDestroyFromOtherSite($request);
+        } catch (Exception $e) {
+            Log::info(["Error: " => $e->getMessage()]);
+        }
 
         //Clear the SSO cookies
         Cookie::queue(Cookie::forget('sso_token'));
@@ -82,7 +67,7 @@ class AuthenticatedSessionController extends Controller
         $request->session()->regenerateToken();
 
 
-        return redirect('/');
+        return redirect('/login');
     }
 
     private function tokenDestroyFromOtherSite($request): void
@@ -91,6 +76,7 @@ class AuthenticatedSessionController extends Controller
 
         $parts = explode('|', $request->cookie('sso_token'));
         $plainToken = $parts[1] ?? null;
+        $hashedToken = null;
         if ($plainToken) {
             $hashedToken = hash('sha256', $plainToken);
         }

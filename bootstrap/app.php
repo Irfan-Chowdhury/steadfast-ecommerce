@@ -1,9 +1,9 @@
 <?php
 
+use App\Http\Middleware\CheckSSOToken;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
-use App\Http\Middleware\SSOAuth;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -13,9 +13,9 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware) {
-            $middleware->alias([
-                'SSOAuth' => SSOAuth::class
-            ]);
+        $middleware->alias([
+                'sso.auth' => CheckSSOToken::class
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {
         //
