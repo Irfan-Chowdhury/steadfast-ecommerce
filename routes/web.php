@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\SSOController;
 use Illuminate\Support\Facades\Route;
@@ -11,7 +12,7 @@ Route::get('/', function () {
 Route::middleware('sso.auth')->group(function () {
 
     Route::get('/dashboard', function () {
-        return view('dashboard');
+        return view('admin.pages.dashboard');
     })->middleware(['auth', 'verified'])->name('dashboard');
 
     Route::middleware('auth')->group(function () {
@@ -19,11 +20,9 @@ Route::middleware('sso.auth')->group(function () {
         Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
         Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
     });
-});
 
-Route::get('/sso-redirect-foodpanda', [SSOController::class, 'redirectToFoodpanda'])
-    ->name('sso.redirect.foodpanda')
-    ->middleware('auth');
+    Route::resource('products', ProductController::class);
+});
 
 
 
