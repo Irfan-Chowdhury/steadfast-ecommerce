@@ -15,6 +15,9 @@
         <div class="form-group">
             <label>Sale Date</label>
             <input type="date" name="sale_date" class="form-control" value="{{ date('Y-m-d') }}" required>
+            @error('sale_date')
+                <small class="text-danger">{{ $message }}</small>
+            @enderror
         </div>
 
         <hr>
@@ -52,17 +55,26 @@
 
         <div class="form-group">
             <label>Discount (TK)</label>
-            <input type="number" name="discount" class="form-control" value="0">
+            <input type="text" name="discount" class="form-control" value="0">
+            @error('discount')
+                <small class="text-danger">{{ $message }}</small>
+            @enderror
         </div>
 
         <div class="form-group">
             <label>VAT (%)</label>
             <input type="number" name="vat_percent" class="form-control" value="0">
+            @error('vat_percent')
+                <small class="text-danger">{{ $message }}</small>
+            @enderror
         </div>
 
         <div class="form-group">
             <label>Paid Amount</label>
-            <input type="number" name="paid_amount" class="form-control">
+            <input type="text" name="paid_amount" class="form-control">
+            @error('paid_amount')
+                <small class="text-danger">{{ $message }}</small>
+            @enderror
         </div>
 
         <input type="hidden" name="vat_amount">
@@ -73,13 +85,13 @@
             <input type="number" name="due_amount" class="form-control" readonly>
         </div>
 
-        <div class="form-group">
+        {{-- <div class="form-group">
             <label>Payment Type</label>
             <select name="payment_type" class="form-control" required>
                 <option value="Cash">Cash</option>
                 <option value="Due">Due</option>
             </select>
-        </div>
+        </div> --}}
 
         <button class="btn btn-primary">Submit</button>
     </form>

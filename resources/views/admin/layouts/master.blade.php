@@ -155,9 +155,9 @@
         <script>
             Swal.fire({
                 icon: 'error',
-                title: 'Validation Error!',
+                title: 'Error!',
                 html: `
-                    <ul style="text-align: left; padding-left: 20px;">
+                    <ul style="text-align: center; padding-left: 20px;">
                         @foreach ($errors->all() as $error)
                             <li>{{ $error }}</li>
                         @endforeach

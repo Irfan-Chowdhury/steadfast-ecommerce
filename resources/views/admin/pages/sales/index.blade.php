@@ -39,10 +39,10 @@
                 <td>{{ $sale->sale_items_count }}</td>
                 <td>
                     <a href="{{ route('sales.show', $sale->id) }}" class="btn btn-sm btn-info">View</a>
-                    <form action="{{ route('sales.destroy', $sale->id) }}" method="POST" style="display:inline-block;" onsubmit="return confirm('Are you sure to delete?');">
+                    <form action="{{ route('sales.destroy', $sale->id) }}" method="POST" id="delete-form-{{ $sale->id }}" style="display:inline-block;">
                         @csrf
                         @method('DELETE')
-                        <button class="btn btn-sm btn-danger">Delete</button>
+                        <button type="button" class="btn btn-sm btn-danger" onclick="confirmDelete({{ $sale->id }})">Delete</button>
                     </form>
                 </td>
             </tr>

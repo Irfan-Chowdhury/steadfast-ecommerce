@@ -9,6 +9,7 @@ use App\Models\SaleItem;
 use App\Services\AccountingService;
 use Exception;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class SaleController extends Controller
 {
@@ -24,7 +25,10 @@ class SaleController extends Controller
 
     public function index()
     {
-        $sales = Sale::withCount('saleItems')->latest()->get();
+        $sales = Sale::withCount('saleItems')
+            ->orderBy('date', 'DESC')
+            ->orderBy('created_at', 'DESC')
+            ->get();
 
         return view('admin.pages.sales.index', compact('sales'));
     }
@@ -33,11 +37,31 @@ class SaleController extends Controller
     {
         $products = Product::all();
 
-        return view('admin.pages.sales.form', compact('products'));
+        return view('admin.pages.sales.create', compact('products'));
     }
 
+    public function store(Request $request)
+    {
+        DB::transaction(function () use ($request) {
+            try {
+                $sale = self::saleStore($request);
 
+                self::saleItemStore($request, $sale->id);
 
+                $this->accountingService->recordSaleTransaction($sale);
+
+                DB::commit();
+
+            } catch (Exception $exception) {
+
+                self::setLogError($exception);
+
+                return redirect()->back()->withErrors(['errors'=> ['Something went wrong']]);
+            }
+        });
+
+        return redirect()->route('sales.index')->with('success', 'Sale created successfully!');
+    }
 
     private function saleStore($request)
     {
@@ -91,40 +115,23 @@ class SaleController extends Controller
     }
 
 
-
-    public function store(Request $request)
-    {
-        DB::transaction(function () use ($request) {
-            try {
-                $sale = self::saleStore($request);
-
-                self::saleItemStore($request, $sale->id);
-
-                $this->accountingService->recordSaleTransaction($sale);
-
-                DB::commit();
-
-            } catch (Exception $exception) {
-
-                return $exception->getMessage();
-
-                return redirect()->back()->with('error', 'Something went wrong! Please try again.')->withInput();
-            }
-        });
-
-        return redirect()->route('sales.index')->with('success', 'Sale created successfully!');
-    }
-
-
     public function show(Sale $sale)
     {
-        //
+        $saleItems = $sale->saleItems;
+
+        $products = Product::all();
+
+        return view('admin.pages.sales.show', compact('sale','products','saleItems'));
     }
 
 
     public function edit(Sale $sale)
     {
-        //
+        $saleItems = $sale->saleItems;
+
+        $products = Product::all();
+
+        return view('admin.pages.sales.edit', compact('sale','products','saleItems'));
     }
 
     public function update(Request $request, Sale $sale)
@@ -134,8 +141,28 @@ class SaleController extends Controller
 
     public function destroy(Sale $sale)
     {
-        $sale->delete();
+        try {
 
-        return redirect()->back();
+            $sale->delete();
+
+        } catch (Exception $exception) {
+
+            Log::error(["error"=>$exception->getMessage()]);
+
+            return redirect()->back()->withErrors(['errors'=> ['Something went wrong']]);
+        }
+
+        return redirect()->back()->with('success', 'Sale deleted successfully!');
+    }
+
+    private function setLogError($exception): void
+    {
+        Log::error('Error occurred', [
+            'message' => $exception->getMessage(),
+            'file' => $exception->getFile(),
+            'line' => $exception->getLine(),
+            'code' => $exception->getCode(),
+            'trace' => $exception->getTraceAsString() // Be careful with this in production
+        ]);
     }
 }
