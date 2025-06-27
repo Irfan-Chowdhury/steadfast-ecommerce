@@ -45,7 +45,6 @@
                         </select>
                     </td>
                     <td><input type="number" name="products[0][quantity]" class="form-control qty" required></td>
-                    {{-- <td><input type="number" step="0.01" name="products[0][unit_price]" class="form-control price" required></td> --}}
                     <td><input type="number" step="0.01" name="products[0][unit_price]" class="form-control price" readonly></td>
                     <td><input type="text" class="form-control total" readonly></td>
                     <td><button type="button" class="btn btn-sm btn-danger removeRow">X</button></td>
@@ -84,15 +83,6 @@
             <label>Due Amount</label>
             <input type="number" name="due_amount" class="form-control" readonly>
         </div>
-
-        {{-- <div class="form-group">
-            <label>Payment Type</label>
-            <select name="payment_type" class="form-control" required>
-                <option value="Cash">Cash</option>
-                <option value="Due">Due</option>
-            </select>
-        </div> --}}
-
         <button class="btn btn-primary">Submit</button>
     </form>
 <div>

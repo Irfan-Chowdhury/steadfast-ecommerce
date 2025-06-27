@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\SaleStoreRequest;
 use App\Models\Product;
 use App\Models\Sale;
 use Illuminate\Http\Request;
@@ -40,7 +41,7 @@ class SaleController extends Controller
         return view('admin.pages.sales.create', compact('products'));
     }
 
-    public function store(Request $request)
+    public function store(SaleStoreRequest $request)
     {
         DB::transaction(function () use ($request) {
             try {
@@ -56,7 +57,7 @@ class SaleController extends Controller
 
                 self::setLogError($exception);
 
-                return redirect()->back()->withErrors(['errors'=> ['Something went wrong']]);
+                return redirect()->back()->withErrors(['errors'=> [$exception->getMessage()]]);
             }
         });
 
@@ -110,6 +111,9 @@ class SaleController extends Controller
     {
         $products = Product::whereIn('id', array_keys($productQuantities))->get();
         foreach ($products as $product) {
+            if ($productQuantities[$product->id] > $product->current_stock) {
+                throw new Exception("The stock of $product->name is insufficient", 1);
+            }
             $product->decrement('current_stock', $productQuantities[$product->id]);
         }
     }
