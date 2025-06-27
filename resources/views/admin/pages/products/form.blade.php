@@ -1,7 +1,7 @@
 <!-- resources/views/products/form.blade.php -->
 @extends('admin.layouts.master')
 
-@section('title', 'Products Create')
+@section('title', 'Products Form')
 
 @section('admin_content')
 

@@ -11,8 +11,13 @@
 |
 */
 
-pest()->extend(Tests\TestCase::class)
-    ->use(Illuminate\Foundation\Testing\RefreshDatabase::class)
+// pest()->extend(Tests\TestCase::class)
+//     ->use(Illuminate\Foundation\Testing\RefreshDatabase::class)
+//     ->in('Feature');
+
+pest()->extend(
+        Tests\TestCase::class,
+        Tests\Authenticate::class)
     ->in('Feature');
 
 /*
@@ -44,4 +49,17 @@ expect()->extend('toBeOne', function () {
 function something()
 {
     // ..
+}
+
+function createSampleProducts($overrides = [])
+{
+    $defaults = [
+        'name' => 'The Mouse 80',
+        'purchase_price' => 8.50,
+        'sell_price' => 14.99,
+        'opening_stock' => 100,
+        'current_stock' => 100,
+    ];
+
+    return array_merge($defaults, $overrides);
 }

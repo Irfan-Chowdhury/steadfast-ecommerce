@@ -1,67 +1,147 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+# 🔐 Laravel SSO Integration: Ecommerce & Foodpanda App
 
-## About Laravel
+This project demonstrates a **secure, seamless Single Sign-On (SSO)** system between two independent Laravel applications:
+- **Ecommerce App**
+- **Foodpanda App**
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+Users can log into **ecommerce**, and be **automatically authenticated** into **foodpanda** — without re-entering their credentials.
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+---
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+## 📌 Features
 
-## Learning Laravel
+- ✅ Laravel 11 projects with separate user tables
+- ✅ Breeze authentication (Blade UI)
+- ✅ Token-based SSO using Laravel Sanctum
+- ✅ Auto-login via cookies across apps
+- ✅ Auto-logout from both apps
+- ✅ Session protection & regeneration
+- ✅ Reusable SSO middleware
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+---
 
-You may also try the [Laravel Bootcamp](https://bootcamp.laravel.com), where you will be guided through building a modern Laravel application from scratch.
+## 📁 Project Structure
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
 
-## Laravel Sponsors
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+Both apps are fully independent and hosted on different ports/domains:
+- **ecommerce-app:** `http://127.0.0.1:8000`
+- **foodpanda-app:** `http://127.0.0.1:8001`
 
-### Premium Partners
+---
 
-- **[Vehikl](https://vehikl.com/)**
-- **[Tighten Co.](https://tighten.co)**
-- **[WebReinvent](https://webreinvent.com/)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel/)**
-- **[Cyber-Duck](https://cyber-duck.co.uk)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Jump24](https://jump24.co.uk)**
-- **[Redberry](https://redberry.international/laravel/)**
-- **[Active Logic](https://activelogic.com)**
-- **[byte5](https://byte5.de)**
-- **[OP.GG](https://op.gg)**
+## 🔐 How SSO Works (Flow Diagram)
 
-## Contributing
+```text
+[1] User logs into Ecommerce App
+     ↓
+[2] Ecommerce creates Sanctum token
+     ↓
+[3] Ecommerce sends token & email via HTTP to Foodpanda
+     ↓
+[4] Foodpanda stores hashed token in DB
+     ↓
+[5] Ecommerce sets browser cookies: sso_token, sso_email
+     ↓
+[6] Later, user visits Foodpanda → middleware checks cookies & token
+     ↓
+[7] If valid → Auth::login() in foodpanda → access granted
+````
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+---
 
-## Code of Conduct
+## 🚀 Login Process
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+### Ecommerce App:
 
-## Security Vulnerabilities
+* User logs in
+* Token is generated (`$user->createToken(...)`)
+* Token + email is sent to Foodpanda via API (`/api/cross-login`)
+* Cookies are set (`sso_token`, `sso_email`)
+* User lands on ecommerce dashboard
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+### Foodpanda App:
 
-## License
+* Middleware checks if cookies exist
+* If cookies are valid, and token matches DB, `Auth::login($user)` is triggered
+* User is logged in **without form**
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
-# steadfast-ecommerce
+---
+
+## 🚪 Logout Process
+
+When the user logs out from **ecommerce**:
+
+1. The SSO token is deleted from both ecommerce & foodpanda databases
+2. Cookies (`sso_token`, `sso_email`) are removed
+3. Session is invalidated
+4. Optionally, foodpanda's session is destroyed via iframe or SSO middleware
+
+---
+
+## 🧠 Middleware (SSO Logic)
+
+Foodpanda uses a middleware `CheckSSOCookie` that:
+
+* Logs user **in** if valid cookie + token found
+* Logs user **out** if cookie is missing but user is logged in
+
+```php
+if (!cookie || !token) {
+    Auth::logout();
+} elseif (cookie exists && !Auth::check()) {
+    // hash token, match in DB → login
+}
+```
+
+---
+
+## 🛡️ Security Considerations
+
+* Tokens are hashed with SHA-256 and never stored in plain form
+* CSRF tokens are applied to all forms
+* Session regeneration is handled after login/logout
+* Token expiration and rotation can be added for extra protection
+
+---
+
+## 🧪 Testing Instructions
+
+1. Visit `http://127.0.0.1:8000/login` and log into ecommerce
+2. Go to ecommerce dashboard → you will now be authenticated
+3. Open `http://127.0.0.1:8001/dashboard` directly → you're auto-logged in
+4. Logout from ecommerce → foodpanda also logs out
+5. Try visiting foodpanda dashboard again → you'll be redirected to login
+
+---
+
+## ⚙️ Technologies Used
+
+* Laravel 11
+* Laravel Sanctum
+* Laravel Breeze
+* HTTP Client (`Http::post()`)
+* Cookie-based session sharing
+* CSRF, hashing, middleware, session
+
+---
+
+## 📂 Future Improvements
+
+* ⏳ Token expiration and auto-refresh
+* 🔄 Centralized SSO server for managing all tokens
+* 🧾 Logging of all SSO login/logout activity
+* 🔔 Optional email alert for new SSO login attempts
+* 📱 Mobile device support with persistent sessions
+
+---
+
+## 👨‍💻 Developer
+
+**Md Irfan Chowdhury** <br>
+Laravel Developer | PHP Specialist <br>
+🔗 [GitHub Profile](#) | 📧 [irfanchowdhury80@gmail.com](irfanchowdhury80@gmail.com)
+
+---
+

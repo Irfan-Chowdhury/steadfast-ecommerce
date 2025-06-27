@@ -7,6 +7,8 @@
 
     <!-- Bootstrap 4 CDN -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- SweetAlert2 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css" rel="stylesheet">
 
     <style>
         body {
@@ -60,10 +62,10 @@
 
     <!-- Navbar -->
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
-        <a class="navbar-brand" href="#">🕒 Time Tracker</a>
+        <a class="navbar-brand" href="#">Stead Fast</a>
         <ul class="navbar-nav ml-auto">
             <li class="nav-item">
-                <span class="nav-link text-light" id="user-name">{{ auth()->user()->name }}</span>
+                <span class="nav-link text-light" id="user-name">{{ auth()->user() ? auth()->user()->name : "" }}</span>
             </li>
             <li class="nav-item">
                 <form method="POST" action="{{ route('logout') }}">
@@ -80,11 +82,7 @@
             <h5 class="text-center py-3">Admin Menu</h5>
             <a href="/dashboard" class="{{ request()->is('dashboard') ? 'active' : '' }}">📊 Dashboard</a>
             <a href="/products" class="{{ request()->is('products') ? 'active' : '' }}">👥 Products</a>
-            <a href="/users" class="{{ request()->is('users') ? 'active' : '' }}">👥 Users</a>
-            <a href="/profile" class="{{ request()->is('profile') ? 'active' : '' }}">🙍 Profile</a>
-            <a href="/clients" class="{{ request()->is('clients') ? 'active' : '' }}">🏢 Clients</a>
-            <a href="/projects" class="{{ request()->is('projects') ? 'active' : '' }}">📁 Projects</a>
-            <a href="/time-logs" class="{{ request()->is('time-logs') ? 'active' : '' }}">🕓 Time Logs</a>
+            <a href="/sales" class="{{ request()->is('sales') ? 'active' : '' }}">👥 Sales</a>
             <a href="/reports" class="{{ request()->is('reports') ? 'active' : '' }}">📈 Reports</a>
         </div>
 
@@ -94,13 +92,80 @@
         </div>
     </div>
 
+    <br>
     <!-- Footer -->
     <div class="footer">
-        &copy; {{ date('Y') }} Time Tracker | All rights reserved.
+        &copy; {{ date('Y') }} Ecommerce | All rights reserved.
     </div>
+
+    <!-- SweetAlert2 JS -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 
     @stack('admin_scripts')
+
+    @if(session('success'))
+        <script>
+            Swal.fire({
+                icon: 'success',
+                title: 'Success!',
+                text: '{{ session('success') }}',
+                confirmButtonColor: '#3085d6',
+            });
+
+
+            function confirmDelete(id) {
+                Swal.fire({
+                    title: 'Are you sure?',
+                    text: "This action cannot be undone!",
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#e3342f',
+                    cancelButtonColor: '#6c757d',
+                    confirmButtonText: 'Yes, delete it!'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        document.getElementById(`delete-form-${id}`).submit();
+                    }
+                });
+            }
+        </script>
+    @endif
+
+    <script>
+        function confirmDelete(id) {
+            Swal.fire({
+                title: 'Are you sure?',
+                text: "This action cannot be undone!",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#e3342f',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: 'Yes, delete it!'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    document.getElementById(`delete-form-${id}`).submit();
+                }
+            });
+        }
+    </script>
+
+    @if ($errors->any())
+        <script>
+            Swal.fire({
+                icon: 'error',
+                title: 'Validation Error!',
+                html: `
+                    <ul style="text-align: left; padding-left: 20px;">
+                        @foreach ($errors->all() as $error)
+                            <li>{{ $error }}</li>
+                        @endforeach
+                    </ul>
+                `,
+            });
+        </script>
+    @endif
+
 </body>
 </html>
