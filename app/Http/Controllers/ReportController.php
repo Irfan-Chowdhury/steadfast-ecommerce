@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Controllers;
 
 use App\Models\Sale;
@@ -14,18 +16,46 @@ class ReportController extends Controller
 
     public function getReportData(Request $request)
     {
-        $validated = $request->validate([
-            'start_date' => 'required|date',
-            'end_date' => 'required|date|after_or_equal:start_date',
-            'report_type' => 'nullable|in:summary,detailed'
+        $validated = $this->validateRequest($request);
+
+        $sales = $this->getSalesData($validated['start_date'], $validated['end_date']);
+        $totalExpenses = $this->calculateTotalExpenses($sales);
+        $netProfit = $this->calculateNetProfit($sales, $totalExpenses);
+
+        $summaryReport = $this->buildSummary($sales, $totalExpenses, $netProfit);
+
+        $detailsReport = [];
+        if ($validated['report_type'] === 'detailed') {
+            $detailsReport = $this->buildDetailedReport($sales);
+        }
+
+        return view('admin.pages.reports.index', [
+            'startDate'     => $validated['start_date'],
+            'endDate'       => $validated['end_date'],
+            'reportType'    => $validated['report_type'],
+            'summaryReport' => $summaryReport,
+            'detailsReport' => $detailsReport,
         ]);
+    }
 
-        // Get sales data
-        $sales = Sale::with('saleItems.product')
-            ->whereBetween('date', [$validated['start_date'], $validated['end_date']])
+    private function validateRequest(Request $request): array
+    {
+        return $request->validate([
+            'start_date'   => 'required|date',
+            'end_date'     => 'required|date|after_or_equal:start_date',
+            'report_type'  => 'nullable|in:summary,detailed',
+        ]);
+    }
+
+    private function getSalesData(string $startDate, string $endDate)
+    {
+        return Sale::with('saleItems.product')
+            ->whereBetween('date', [$startDate, $endDate])
             ->get();
+    }
 
-        // Calculate totals
+    private function calculateTotalExpenses($sales): float
+    {
         $totalExpenses = 0;
         foreach ($sales as $sale) {
             foreach ($sale->saleItems as $saleItem) {
@@ -33,18 +63,41 @@ class ReportController extends Controller
             }
         }
 
-        $netProfit = $sales->sum('total_amount') - $totalExpenses - $sales->sum('discount');
+        return $totalExpenses;
+    }
 
-        $summary = (object) [
-            'totalSales' => number_format($sales->sum('total_amount'), 2),
-            'totalDiscount' => number_format($sales->sum('discount'), 2),
-            'totalVat' => number_format($sales->sum('vat_amount'), 2),
-            'totalExpenses' => number_format($totalExpenses, 2),
-            'netProfit' => number_format($netProfit, 2)
+    private function calculateNetProfit($sales, float $expenses): float
+    {
+        return $sales->sum('total_amount') - $expenses - $sales->sum('discount');
+    }
+
+    private function buildSummary($sales, float $expenses, float $netProfit): object
+    {
+        return (object) [
+            'totalSales'     => number_format((float)$sales->sum('total_amount'),2),
+            'totalDiscount'  => number_format((float)$sales->sum('discount'),2),
+            'totalVat'       => number_format((float)$sales->sum('vat_amount'),2),
+            'totalExpenses'  => number_format((float)$expenses,2),
+            'netProfit'      => number_format((float)$netProfit,2),
         ];
+    }
 
+    private function buildDetailedReport($sales)
+    {
+        return $sales->map(function ($sale) {
+            $expenses = $sale->saleItems->sum(function ($item) {
+                return $item->quantity * $item->product->purchase_price;
+            });
 
-        return view('admin.pages.reports.index', compact('summary'));
-
+            return (object) [
+                'date'          => $sale->date->format('Y-m-d'),
+                'invoiceNumber' => $sale->invoice_number,
+                'sales'         => number_format((float)$sale->total_amount, 2),
+                'discount'      => number_format((float)$sale->discount, 2),
+                'vat'           => number_format((float)$sale->vat_amount, 2),
+                'expenses'      => number_format($expenses, 2),
+                'profit'        => number_format((float)$sale->total_amount - $expenses - $sale->discount, 2),
+            ];
+        });
     }
 }

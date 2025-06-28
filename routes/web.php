@@ -25,8 +25,9 @@ Route::middleware('sso.auth','auth')->group(function () {
 
     Route::resource('products', ProductController::class);
     Route::resource('sales', SaleController::class);
+
     Route::get('/reports', [ReportController::class, 'index'])->name('report.index');
-    Route::post('/reports/financial', [ReportController::class, 'getReportData'])->name('financial.report.data');
+    Route::post('/reports', [ReportController::class, 'getReportData'])->name('report.generate');
 });
 
 
