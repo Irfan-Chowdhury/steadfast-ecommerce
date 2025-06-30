@@ -1,7 +1,7 @@
 
-# 🔐 Laravel SSO Integration: Ecommerce & Foodpanda App
+# 🔐 Multi-System Login: Ecommerce Part
 
-This project demonstrates a **secure, seamless Single Sign-On (SSO)** system between two independent Laravel applications:
+This project demonstrates a **secure, seamless multi system login** system between two independent Laravel applications:
 - **Ecommerce App**
 - **Foodpanda App**
 
@@ -12,7 +12,7 @@ Users can log into **ecommerce**, and be **automatically authenticated** into **
 ## 📌 Features
 
 - ✅ Laravel 11 projects with separate user tables
-- ✅ Breeze authentication (Blade UI)
+- ✅ Breeze authentication (Customized UI)
 - ✅ Token-based SSO using Laravel Sanctum
 - ✅ Auto-login via cookies across apps
 - ✅ Auto-logout from both apps
@@ -21,17 +21,29 @@ Users can log into **ecommerce**, and be **automatically authenticated** into **
 
 ---
 
-## 📁 Project Structure
-
+## 📁 Demo Project
 
 
 Both apps are fully independent and hosted on different ports/domains:
-- **ecommerce-app:** `http://127.0.0.1:8000`
-- **foodpanda-app:** `http://127.0.0.1:8001`
+- **Demo Ecommerce App:** [http://ecommerce.irfandev.xyz/login](http://ecommerce.irfandev.xyz/login)
+Credentials -
+
+    ```php
+    email: admin@gmail.com
+    password: admin@gmail.com
+    ```
+
+
+- **Demo Foodpanda App:** [http://foodpanda.irfandev.xyz/login](http://foodpanda.irfandev.xyz/login)
+
+    ```php
+    email: admin@gmail.com
+    password: admin@gmail.com
+    ```
 
 ---
 
-## 🔐 How SSO Works (Flow Diagram)
+## 🔐 How Multiple Login Works (Flow Diagram)
 
 ```text
 [1] User logs into Ecommerce App
@@ -47,11 +59,75 @@ Both apps are fully independent and hosted on different ports/domains:
 [6] Later, user visits Foodpanda → middleware checks cookies & token
      ↓
 [7] If valid → Auth::login() in foodpanda → access granted
-````
+     ↓
+[8] Logout functionality that signs the user out of both apps.
+```
 
 ---
 
-## 🚀 Login Process
+
+## ⚙️ Technologies Used
+
+* Laravel 11
+* Laravel Sanctum
+* Laravel Breeze
+* HTTP Client (`Http::post()`)
+* Cookie-based session sharing
+* CSRF, hashing, middleware, session
+
+---
+
+### 📥 Installation Steps
+
+- Clone the repository
+
+```bash
+git clone git@github.com:Irfan-Chowdhury/steadfast-ecommerce.git
+```
+
+- Install PHP dependencies
+
+```bash
+composer install
+```
+
+- Copy .env file and configure DB
+
+```bash
+cp .env.example .env
+```
+Edit DB credentials in .env file
+
+
+- Generate key & run migrations
+
+```bash
+php artisan key:generate
+php artisan migrate --seed
+```
+
+- Install Node dependencies (optional for UI)
+
+```bash
+npm install && npm run build
+```
+
+- Start the server
+
+```bash
+php artisan serve
+```
+
+## 🧪 Testing Instructions
+
+1. Visit: [http://127.0.0.1:8000/login](http://127.0.0.1:8000/login) and log into ecommerce
+2. Go to ecommerce dashboard → you will now be authenticated
+3. Open [http://127.0.0.1:8001/login](http://127.0.0.1:8001/login) directly → you're auto-logged in
+4. Logout from ecommerce → foodpanda also logs out
+5. Try visiting foodpanda dashboard again → you'll be redirected to login
+
+
+## Login Process
 
 ### Ecommerce App:
 
@@ -69,14 +145,15 @@ Both apps are fully independent and hosted on different ports/domains:
 
 ---
 
-## 🚪 Logout Process
+## Logout Process
 
+<!-- When the user logs out from **ecommerce** or **foodpanda**: -->
 When the user logs out from **ecommerce**:
 
 1. The SSO token is deleted from both ecommerce & foodpanda databases
 2. Cookies (`sso_token`, `sso_email`) are removed
 3. Session is invalidated
-4. Optionally, foodpanda's session is destroyed via iframe or SSO middleware
+4. Optionally, foodpanda's session is destroyed via cookie, SSO middleware
 
 ---
 
@@ -106,42 +183,12 @@ if (!cookie || !token) {
 
 ---
 
-## 🧪 Testing Instructions
 
-1. Visit `http://127.0.0.1:8000/login` and log into ecommerce
-2. Go to ecommerce dashboard → you will now be authenticated
-3. Open `http://127.0.0.1:8001/dashboard` directly → you're auto-logged in
-4. Logout from ecommerce → foodpanda also logs out
-5. Try visiting foodpanda dashboard again → you'll be redirected to login
 
----
-
-## ⚙️ Technologies Used
-
-* Laravel 11
-* Laravel Sanctum
-* Laravel Breeze
-* HTTP Client (`Http::post()`)
-* Cookie-based session sharing
-* CSRF, hashing, middleware, session
-
----
-
-## 📂 Future Improvements
-
-* ⏳ Token expiration and auto-refresh
-* 🔄 Centralized SSO server for managing all tokens
-* 🧾 Logging of all SSO login/logout activity
-* 🔔 Optional email alert for new SSO login attempts
-* 📱 Mobile device support with persistent sessions
-
----
-
-## 👨‍💻 Developer
+## 👨‍💻 Author
 
 **Md Irfan Chowdhury** <br>
-Laravel Developer | PHP Specialist <br>
-🔗 [GitHub Profile](#) | 📧 [irfanchowdhury80@gmail.com](irfanchowdhury80@gmail.com)
+PHP-Laravel Developer  <br>
+🔗 [LinkedIn Profile](https://www.linkedin.com/in/irfan-chowdhury/) | 📧 [irfanchowdhury80@gmail.com](irfanchowdhury80@gmail.com)
 
 ---
-
