@@ -6,9 +6,22 @@ use App\Http\Controllers\ReportController;
 use App\Http\Controllers\SaleController;
 use App\Http\Controllers\SSOController;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Artisan;
+
+
+
+Route::get('/clear-config-cache', function () {
+    Artisan::call('config:clear');
+    Artisan::call('cache:clear');
+    return 'Config and cache cleared!';
+});
+
 
 Route::get('/', function () {
-    return view('welcome');
+    // return view('welcome');
+    return Auth::check()
+        ? redirect()->back()   // if logged in
+        : redirect()->route('login');      // if guest
 });
 
 Route::middleware('sso.auth','auth')->group(function () {

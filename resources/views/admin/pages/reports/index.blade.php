@@ -223,10 +223,7 @@
 @push('admin_scripts')
 <script>
 
-
 $(document).ready(function() {
-    // Generate report on form submit
-
     // Print report
     $('#printReport').click(function() {
         window.print();

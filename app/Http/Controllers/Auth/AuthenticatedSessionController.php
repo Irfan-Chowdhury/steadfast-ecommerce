@@ -30,13 +30,13 @@ class AuthenticatedSessionController extends Controller
     {
         $request->authenticate();
         $request->session()->regenerate();
-
         $user = Auth::user();
+
 
         try {
             $token = $user->createToken('SSO-Token')->plainTextToken;
             $redirectToUrl = config('app.sso_redirect_url');
-            Http::withToken($token)->post("$redirectToUrl/api/cross-login", [
+            $response = Http::withToken($token)->post("$redirectToUrl/api/cross-login", [
                 'email' => $user->email
             ]);
         } catch (Exception $e) {
@@ -47,6 +47,10 @@ class AuthenticatedSessionController extends Controller
         return redirect('/dashboard')
             ->withCookie(cookie('sso_token', $token, 60))
             ->withCookie(cookie('sso_email', $user->email, 60));
+
+        // return redirect('/dashboard')
+        //     ->withCookie('sso_token', $token, 60, '/', config('session.domain'), config('session.secure'), true, false, config('session.same_site'))
+        //     ->withCookie('sso_email',  $user->email, 60, '/', config('session.domain'), config('session.secure'), true, false, config('session.same_site'));
     }
 
     public function destroy(Request $request): RedirectResponse
@@ -83,8 +87,9 @@ class AuthenticatedSessionController extends Controller
 
         $user->tokens()->where('token', $hashedToken)->delete();
 
+        $redirectToUrl = config('app.sso_redirect_url');
 
-        Http::post('http://127.0.0.1:8001/api/sso-logout', [
+        Http::post("$redirectToUrl/api/sso-logout", [
             'email' => $request->user()->email,
             'token' => $request->cookie('sso_token'),
         ]);
