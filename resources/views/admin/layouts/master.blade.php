@@ -81,9 +81,6 @@
         <div class="sidebar">
             <h5 class="text-center py-3">Admin Menu</h5>
             <a href="/dashboard" class="{{ request()->is('dashboard') ? 'active' : '' }}">📊 Dashboard</a>
-            <a href="/products" class="{{ request()->is('products') ? 'active' : '' }}">👥 Products</a>
-            <a href="/sales" class="{{ request()->is('sales') ? 'active' : '' }}">👥 Sales</a>
-            <a href="/reports" class="{{ request()->is('reports') ? 'active' : '' }}">📈 Reports</a>
         </div>
 
         <!-- Content Area -->

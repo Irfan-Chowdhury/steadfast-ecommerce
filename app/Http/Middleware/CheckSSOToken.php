@@ -50,4 +50,68 @@ class CheckSSOToken
 
         return $next($request);
     }
+
+
+
+    // public function handle(Request $request, Closure $next): Response
+    // {
+
+    //     $ssoTokenCookie = $request->cookie('sso_token');
+    //     $ssoEmail  = $request->cookie('sso_email');
+
+    //     $hashedToken = self::generateHashedToken($ssoTokenCookie);
+
+    //     if (Auth::check()) {
+
+    //         $exists = self::isHashTokenExists($hashedToken, auth()->user()->id);
+
+    //         if (!$ssoTokenCookie || !$exists) {
+    //             Auth::logout();
+    //         }
+
+    //         $request->session()->invalidate();
+    //         $request->session()->regenerateToken();
+    //     }
+
+    //     // else if (!Auth::check()) {
+    //     //     if ($ssoTokenCookie && $ssoEmail) {
+
+    //     //         $user = User::where('email', $ssoEmail)->first();
+
+    //     //         if ($user) {
+
+    //     //             $exists =self::isHashTokenExists($hashedToken, $user->id);
+
+    //     //             if ($exists) {
+    //     //                 Auth::login($user);
+    //     //             }
+    //     //         }
+    //     //     }
+    //     // }
+
+    //     return $next($request);
+    // }
+
+
+    private function generateHashedToken($ssoTokenCookie)
+    {
+        $hashedToken = '';
+        $parts = explode('|', $ssoTokenCookie);
+        $plainToken = $parts[1] ?? null;
+        if ($plainToken) {
+            $hashedToken = hash('sha256', $plainToken);
+        }
+
+        return $hashedToken;
+    }
+
+    private function isHashTokenExists($hashedToken, $userId)
+    {
+        return PersonalAccessToken::where('tokenable_id', $userId)
+                ->where('token', $hashedToken)
+                ->exists();
+
+    }
+
+
 }
